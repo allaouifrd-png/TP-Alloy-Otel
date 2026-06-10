@@ -1,7 +1,6 @@
 # TP-Alloy-Otel
 
 **Exercice 1  ·**  **Mettre Alloy en route**                                                                     
-
 **Objectif :** lancer un conteneur Alloy avec un pipeline minimal — un receiver OTLP relié à un exporteur debug — puis ouvrir l'UI pour inspecter le graphe de composants.
 
 Pour commencer cet exercice, je vais créer un dossier nommé **alloy-lab** et me placer dans ce dossier :
@@ -375,3 +374,201 @@ Au niveau du graphe, l’UI Alloy affiche bien les 4 composants du pipeline. Le 
 <img width="1137" height="832" alt="image" src="https://github.com/user-attachments/assets/2a80668b-b865-487c-8de9-9f3e28e72b4e" />
 
 Cet exercice m'a permis de comprendre qu'Alloy fonctionne comme une pipeline de traitement capable d'enrichir (ajouter des labels) et d'optimiser (regrouper les données pour les envoyer par lots) la télémétrie. Les données ne vont plus directement du Receiver à l'Exporter mais passent par le Receiver OTLP --> Processor Attributes --> Processor Batch --> Exporter Debug. De plus, le hot reload permet d'appliquer les changements appliqués dans la configuration d'Alloy, ce qui permet d'éviter l'interruption du service en cas de changement de configuration.
+
+**Exercice 5  ·**  **Scraper des cibles Prometheus et expédier vers Mimir**                                                                     
+**Objectif :** déployer Mimir comme backend de métriques, déployer node_exporter comme cible à scraper, configurer Alloy pour le scraper et faire remote_write vers Mimir, et visualiser dans Grafana.
+
+Pour faire cette exercice, je vais créer un répertoire dédiée à Mimir et m'y positionner : 
+
+```bash
+mkdir -p mimir
+cd mimir
+```
+Dans le fichier mimir.yaml je vais renseigner le contenu suivant : 
+
+```bash
+multitenancy_enabled: false
+
+server:
+  http_listen_port: 9009
+
+common:
+  storage:
+    backend: filesystem
+
+blocks_storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/blocks
+
+compactor:
+  data_dir: /data/compactor
+
+ruler:
+  rule_path: /data/rules
+
+target: all
+```
+
+Ensuite, je vais lancer Mimir grâce a cette commande : 
+
+```bash
+docker run -d \
+  --name mimir \
+  -p 9009:9009 \
+  -v /home/ubuntu/mimir/mimir.yaml:/etc/mimir.yaml \
+  grafana/mimir:2.14.0 \
+  -config.file=/etc/mimir.yaml
+```
+La commande suivante, me permet de voir les logs du conteneur Mimir : 
+
+```bash
+docker logs mimir
+```
+Grâce à ces logs, je m'aperçoit que Mimir à bien démarrer et écoute sur les ports HTTP 9009 et gRPC 9095
+
+```bash
+server listening on addresses http=[::]:9009 grpc=[::]:9095
+```
+Ensuite, je vais lancer Node Exporter grâce à la commande ci-dessous : 
+
+```bash
+docker run -d \
+  --name node-exporter \
+  -p 9100:9100 \
+  prom/node-exporter:v1.8.2
+```
+
+La commande ci-dessous permet de vérifier que Node Exporter fonctionne correctement en affichant les métriques système qu'il expose au format Prometheus :
+
+```bash
+curl http://192.168.1.78:9100/metrics
+```
+
+Ci-dessous l'une des valeurs retournées grâce à la commande précédente : 
+
+```bash
+process_virtual_memory_bytes 1.269792768e+09
+```
+Cette valeur indique que le processus utilise environ 1,27 Go de mémoire virtuelle
+
+Ensuite, je vais déployer Grafana grâce à la commande ci-dessous : 
+
+```bash
+docker run -d \
+  --name grafana \
+  -p 3000:3000 \
+  grafana/grafana:11.4.0
+```
+
+L'interface d'administration de Grafana est accessible via cette ip : 
+
+```bash
+http://192.168.1.78:3000
+```
+
+Dans cette étape, je vais modifier Alloy 
+
+```bash
+nano /home/ubuntu/alloy-lab/config.alloy
+```
+Pour ajouter le contenu suivant à la fin :
+
+```bash
+prometheus.scrape "node" {
+  targets = [{
+    __address__ = "192.168.1.78:9100",
+  }]
+
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://192.168.1.78:9009/api/v1/push"
+  }
+}
+```
+Ensuite, je vais recharger Alloy gâce a cette commande :
+
+```bash
+curl -X POST http://192.168.1.78:12345/-/reload
+```
+
+Et vérifier si Alloy est bien prêt :
+
+```bash
+curl http://192.168.1.78:12345/-/ready
+```
+
+Après avoir lancé la commande suivante :
+
+```bash
+curl -s "http://192.168.1.78:9009/prometheus/api/v1/query?query=up"
+```
+J'ai eu ce message d'erreur de Mimir "expanding series: too many unhealthy instances in the ring"
+
+Les logs Mimir indique aussi ceci "at least 2 live replicas required, could only find 1" cela indique que Mimir attend plusieurs replicas alors que dans ce TP je n'ai qu'une seul instance Mimir. 
+
+Donc j'ai du modifier le fichier le fichier Mimir.yaml en ajoutant ce bloc a la fin du fichier : 
+
+```bash
+ingester:
+  ring:
+    replication_factor: 1
+
+store_gateway:
+  sharding_ring:
+    replication_factor: 1
+```
+
+J'ai enregistré la configuration et relancé le conteneur avec la nouvelle configuration Mimir : 
+
+```bash
+sudo docker restart mimir
+```
+Grâce a la commande suivante, je peux voir si Mimir reçoit bien les métriques : 
+
+Grâce à la commande suivante, j'ai pu vérifier si Mimir recevait correctement les métriques envoyées par Alloy :
+
+curl -s "http://192.168.1.78:9009/prometheus/api/v1/query?query=up"
+
+Lors de la première exécution, la requête a bien été traitée par Mimir puisque le statut retourné était success. Mias, le champ result était vide, ce qui signifie qu'aucune métrique up n'était encore disponible dans Mimir à ce moment-là.
+
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": []
+  }
+}
+
+Quelques instants plus tard, après que Alloy ait effectué le scrape de Node Exporter et transmis les métriques à Mimir, la même requête a retourné le résultat suivant :
+
+{
+  "status":"success",
+  "data":{
+    "resultType":"vector",
+    "result":[
+      {
+        "metric":{
+          "__name__":"up",
+          "instance":"192.168.1.78:9100",
+          "job":"prometheus.scrape.node"
+        },
+        "value":[1781099079.415,"1"]
+      }
+    ]
+  }
+}
+
+La valeur 1 de la métrique up indique que la cible 192.168.1.78:9100, correspondant à Node Exporter, est joignable et que son scrape est effectué correctement par Alloy.
+
+J'ai ensuite ajouté Mimir comme source de données dans Grafana en utilisant le type de datasource Prometheus avec l'URL de Mimir. Dans l'outil Explore, l'exécution de la requête up retourne également la valeur 1, ce qui confirme que les métriques sont bien collectées par Alloy, stockées dans Mimir puis consultables depuis Grafana.
+
+<img width="1898" height="885" alt="image" src="https://github.com/user-attachments/assets/1c1866f6-3498-4444-80a7-59331434a3c6" />
+
+Cette vérification valide le bon fonctionnement de la chaîne complète : Node Exporter → Alloy → Mimir → Grafana.
+
+
+
