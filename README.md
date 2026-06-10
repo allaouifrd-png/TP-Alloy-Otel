@@ -269,5 +269,22 @@ do
   curl -s http://192.168.1.78:5000/ >/dev/null
 done
 ```
-
-Ensuite, dans Alloy je vais vérifier les logs pour confirmer que l'application Flask envoie réellement ses données vers Alloy.
+Les logs montrent bien que le service demo envoie des traces :
+```bash
+service.name: Str(demo)
+ResourceSpans
+InstrumentationScope opentelemetry.instrumentation.flask
+Name: GET /
+```
+On observe également des erreurs HTTP 500 générées aléatoirement par l’application :
+```bash
+Status code    : Error
+http.status_code: Int(500)
+```
+Enfin, les métriques HTTP sont également présentes :
+```bash
+ResourceMetrics
+Name: http.server.duration
+http.status_code: Int(200)
+http.status_code: Int(500)
+```
