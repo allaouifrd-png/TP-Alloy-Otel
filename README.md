@@ -85,7 +85,10 @@ docker run -d \
   grafana/alloy:v1.5.1 \
   run /etc/alloy/config.alloy \
   --server.http.listen-addr=0.0.0.0:12345
+  --stability.level=experimental
 ```
+Important : sans ceci **--stability.level=experimental**, le conteneur ne se lance pas, car comme indiqué dans la documentation technique d’Alloy, certains composants, dont otelcol.exporter.debug, sont encore classés au niveau de stabilité experimental. Par défaut, Alloy n’autorise que les composants generally-available, sauf si ce niveau de stabilité est explicitement activé au démarrage.
+
 Grâce à cette commande, je peux m'assurer qu'Alloy fonctionne correctement : 
 
 ```bash
