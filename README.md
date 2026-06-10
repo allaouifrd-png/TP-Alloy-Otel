@@ -277,14 +277,89 @@ InstrumentationScope opentelemetry.instrumentation.flask
 Name: GET /
 ```
 On observe également des erreurs HTTP 500 générées aléatoirement par l’application :
+
 ```bash
 Status code    : Error
 http.status_code: Int(500)
 ```
 Enfin, les métriques HTTP sont également présentes :
+
 ```bash
 ResourceMetrics
 Name: http.server.duration
 http.status_code: Int(200)
 http.status_code: Int(500)
 ```
+
+**Exercice 4  ·**  **Maîtriser la syntaxe Alloy : pipeline, UI, hot reload	Fondamentaux**   
+
+**Objectif :** étendre le pipeline Alloy avec une chaîne de processors entre le receiver OTLP et l'exporteur debug, observer le graphe en direct dans l'UI, et recharger la configuration sans redémarrer Alloy.
+
+Dans cet exercice, je vais ajouter deux processors entre le receiver OTLP et l'exporteur debug. Ensuite, je vais recharger Alloy sans redémarrer le conteneur. 
+
+Dans le fichier **config.alloy** 
+
+Je vais intégrer ce contenu en remplacement de l'ancienne configuration :
+
+```bash
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.attributes.lab.input]
+    logs    = [otelcol.processor.attributes.lab.input]
+    traces  = [otelcol.processor.attributes.lab.input]
+  }
+}
+
+otelcol.processor.attributes "lab" {
+  action {
+    key    = "deployment.environment"
+    value  = "lab"
+    action = "insert"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.debug.default.input]
+    logs    = [otelcol.exporter.debug.default.input]
+    traces  = [otelcol.exporter.debug.default.input]
+  }
+}
+
+otelcol.exporter.debug "default" {
+  verbosity = "detailed"
+}
+```
+Ensuite, je vais recharger Alloy à chaud grâce à cette commande : 
+
+```bash
+curl -X POST http://192.168.1.78:12345/-/reload
+```
+
+Pour vérifier que Alloy fonctionne, je vais utiliser cette commande : 
+
+```bash
+curl -s http://192.168.1.78:12345/-/ready
+```
+
+Et pour générer du trafic, je vais lancer cette commande : 
+
+```bash
+for i in $(seq 1 20); do curl -s http://192.168.1.78:5000/ >/dev/null; done
+```
+
+
