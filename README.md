@@ -92,12 +92,24 @@ Important : sans ceci **--stability.level=experimental**, le conteneur ne se lan
 Grâce à cette commande, je peux m'assurer qu'Alloy fonctionne correctement : 
 
 ```bash
-curl -s http://localhost:12345/-/ready
+ubuntu@ubuntu-telemetry:~/alloy-lab$ curl -s http://192.168.1.78:12345/-/ready
+Alloy is ready.
+ubuntu@ubuntu-telemetry:~/alloy-lab$ 
 ```
 La commande ci-dessous me permet de voir les logs du conteneur Alloy :
 
 ```bash
 docker logs alloy
 ```
+Grâce aux logs, on peut voir que les récepteurs OTLP/gRPC et OTLP/HTTP ont bien démarré et écoutent sur leur port respectif.
+
+```bash
+ts=2026-06-10T09:13:42.537790103Z level=info msg="Starting GRPC server" component_path=/ component_id=otelcol.receiver.otlp.default endpoint=0.0.0.0:4317
+```
+
+```bash
+ts=2026-06-10T09:13:42.537921124Z level=info msg="Starting HTTP server" component_path=/ component_id=otelcol.receiver.otlp.default endpoint=0.0.0.0:4318
+```
+
 Sur l'interface graphique, je peux visualiser le graphe Alloy :
 
