@@ -533,7 +533,7 @@ Grâce à la commande suivante, j'ai pu vérifier si Mimir recevait correctement
 
 curl -s "http://192.168.1.78:9009/prometheus/api/v1/query?query=up"
 
-Lors de la première exécution, la requête a bien été traitée par Mimir puisque le statut retourné était success. Mias, le champ result était vide, ce qui signifie qu'aucune métrique up n'était encore disponible dans Mimir à ce moment-là.
+Lors de la première exécution, la requête a bien été traitée par Mimir puisque le statut retourné était success. Mais, le champ result était vide, ce qui signifie qu'aucune métrique up n'était encore disponible dans Mimir à ce moment-là.
 ```bash
 {
   "status": "success",
