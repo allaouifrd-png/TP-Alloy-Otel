@@ -167,5 +167,16 @@ docker run --rm \
 Grâce à la commande ci-dessous, je vais vérifier dans les logs du conteneur alloy que les traces, métriques et logs OpenTelemetry ont bien été reçus par le collecteur :
 
 ```bash
-docker logs alloy | grep -E "ResourceSpans|ResourceMetrics|ResourceLogs"
+sudo docker logs alloy 2>&1 | grep -E "msg=Traces|msg=Metrics|msg=Logs"
+```
+```bash
+ubuntu@ubuntu-telemetry:~/alloy-lab$ sudo docker logs alloy 2>&1 | grep -E "msg=Traces|msg=Metrics|msg=Logs"
+ts=2026-06-10T09:52:31.689577258Z level=info msg=Traces component_path=/ component_id=otelcol.exporter.debug.default "resource spans"=1 spans=2
+ts=2026-06-10T09:52:33.690146916Z level=info msg=Traces component_path=/ component_id=otelcol.exporter.debug.default "resource spans"=1 spans=2
+ts=2026-06-10T09:52:35.691684874Z level=info msg=Traces component_path=/ component_id=otelcol.exporter.debug.default "resource spans"=1 spans=2
+ts=2026-06-10T09:52:37.693111746Z level=info msg=Traces component_path=/ component_id=otelcol.exporter.debug.default "resource spans"=1 spans=2
+ts=2026-06-10T09:52:39.68843139Z level=info msg=Traces component_path=/ component_id=otelcol.exporter.debug.default "resource spans"=1 spans=2
+ts=2026-06-10T09:52:55.035977834Z level=info msg=Metrics component_path=/ component_id=otelcol.exporter.debug.default "resource metrics"=1 metrics=12 "data points"=12
+ts=2026-06-10T09:53:03.692704903Z level=info msg=Logs component_path=/ component_id=otelcol.exporter.debug.default "resource logs"=1 "log records"=6
+ubuntu@ubuntu-telemetry:~/alloy-lab$
 ```
