@@ -266,7 +266,7 @@ Pour générer du trafic je vais utiliser cette commande :
 ```bash
 for i in $(seq 1 30)
 do
-  curl -s http://172.17.0.2:5000/ >/dev/null
+  curl -s http://192.168.1.78:5000/ >/dev/null
 done
 ```
 
