@@ -249,12 +249,12 @@ docker build -t demo-app .
 Dans cette étape, je vais lancer l'application Docker précédemment construite :
 
 ```bash
-docker run -d \
+sudo docker run -d \
   --name app \
   --network bridge \
   -p 5000:5000 \
   -e OTEL_SERVICE_NAME=demo \
-  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://172.17.0.2:4318 \
+  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://172.17.0.1:4318 \
   -e OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
   -e OTEL_TRACES_EXPORTER=otlp \
   -e OTEL_METRICS_EXPORTER=otlp \
