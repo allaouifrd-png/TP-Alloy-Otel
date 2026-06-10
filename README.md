@@ -111,5 +111,9 @@ ts=2026-06-10T09:13:42.537790103Z level=info msg="Starting GRPC server" componen
 ts=2026-06-10T09:13:42.537921124Z level=info msg="Starting HTTP server" component_path=/ component_id=otelcol.receiver.otlp.default endpoint=0.0.0.0:4318
 ```
 
-Sur l'interface graphique, je peux visualiser le graphe Alloy :
+Sur l'interface graphique, je peux visualiser le graphe Alloy, ce qui indique également que les deux composants sont correctement liés :
+
+<img width="722" height="671" alt="image" src="https://github.com/user-attachments/assets/732112c5-04ef-4643-a703-000064957696" />
+
+
 
