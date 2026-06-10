@@ -135,7 +135,7 @@ docker run --rm \
   --network bridge \
   ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
   traces \
-  --otlp-endpoint alloy:4317 \
+  --otlp-endpoint 172.17.0.1:4317 \
   --otlp-insecure \
   --traces 5
 ```
@@ -147,7 +147,7 @@ docker run --rm \
   --network bridge \
   ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
   metrics \
-  --otlp-endpoint alloy:4317 \
+  --otlp-endpoint 172.17.0.1:4317 \
   --otlp-insecure \
   --duration 10s
 ```
@@ -159,7 +159,13 @@ docker run --rm \
   --network bridge \
   ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
   logs \
-  --otlp-endpoint alloy:4317 \
+  --otlp-endpoint 172.17.0.1:4317 \
   --otlp-insecure \
   --duration 5s
+```
+
+Grâce à la commande ci-dessous, je vais vérifier dans les logs du conteneur alloy que les traces, métriques et logs OpenTelemetry ont bien été reçus par le collecteur :
+
+```bash
+docker logs alloy | grep -E "ResourceSpans|ResourceMetrics|ResourceLogs"
 ```
