@@ -362,4 +362,16 @@ Et pour générer du trafic, je vais lancer cette commande :
 for i in $(seq 1 20); do curl -s http://192.168.1.78:5000/ >/dev/null; done
 ```
 
+Au niveau des logs, je vois que les processors attributes et batch sont bien chargés par Alloy. L’attribut deployment.environment: Str(lab) apparaît dans les informations reçus.
 
+```bash
+node_id=otelcol.processor.batch.default
+node_id=otelcol.processor.attributes.lab
+deployment.environment: Str(lab)
+```
+
+Au niveau du graphe, l’UI Alloy affiche bien les 4 composants du pipeline. Le flux passe du receiver OTLP vers le processor attributes, puis vers le processor batch, puis vers l’exporteur debug.
+
+<img width="1137" height="832" alt="image" src="https://github.com/user-attachments/assets/2a80668b-b865-487c-8de9-9f3e28e72b4e" />
+
+Cet exercice m'a permis de comprendre qu'Alloy fonctionne comme une pipeline de traitement capable d'enrichir (ajouter des labels) et d'optimiser (regrouper les données pour les envoyer par lots) la télémétrie. Les données ne vont plus directement du Receiver à l'Exporter mais passent par le Receiver OTLP --> Processor Attributes --> Processor Batch --> Exporter Debug. De plus, le hot reload permet d'appliquer les changements appliqués dans la configuration d'Alloy, ce qui permet d'éviter l'interruption du service en cas de changement de configuration.
