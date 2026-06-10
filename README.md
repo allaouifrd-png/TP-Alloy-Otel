@@ -208,7 +208,7 @@ def home():
 
 app.run(host="0.0.0.0", port=5000)
 ```
-Ensuite, j'ai créer un fichier requirements.txt qui sert à lister toutes les dépendances Python nécessaires au bon fonctionnememnt de l'application app.py : 
+Ensuite, j'ai créé un fichier **requirements.txt** qui sert à lister toutes les dépendances Python nécessaires au bon fonctionnement de l'application **app.py** :
 
 ```bash
 nano requirements.txt
@@ -220,7 +220,12 @@ opentelemetry-distro
 opentelemetry-exporter-otlp
 ```
 
-Ensuite, je vais créer un fichier Dockerfile dans le quel je vais construire l'application app.py et cette commande RUN pip install -r requirements.txt demande à pip d'installer automatiquement tous les paquets présents dans le fichier.
+Ensuite, je vais créer un fichier **Dockerfile** dans lequel je vais construire l'application **app.py**, et cette commande :
+
+```bash
+RUN pip install -r requirements.txt
+```
+demande à pip d'installer automatiquement tous les paquets présents dans le fichier.
 
 ```bash
 FROM python:3.11-slim
@@ -241,8 +246,7 @@ Pour contruire l'image, je vais utiliser cette commande :
 ```bash
 docker build -t demo-app .
 ```
-
-Dans cette étape, je vais lancer l'application docker précédement construit 
+Dans cette étape, je vais lancer l'application Docker précédemment construite :
 
 ```bash
 docker run -d \
