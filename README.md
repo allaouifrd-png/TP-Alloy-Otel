@@ -115,5 +115,27 @@ Sur l'interface graphique, je peux visualiser le graphe Alloy, ce qui indique é
 
 <img width="722" height="671" alt="image" src="https://github.com/user-attachments/assets/732112c5-04ef-4643-a703-000064957696" />
 
+**Exercice 2  ·**  **Envoyer des données OTLP avec telemetrygenEnvoyer des données OTLP avec telemetrygen**   
 
+**Objectif :** utiliser l'outil de référence de la communauté OpenTelemetry, telemetrygen, pour pousser de faux traces, métriques et logs dans Alloy. Confirmer leur arrivée en lisant les logs Alloy.
 
+Pour faire cette exercice, comme indiqué dans l'indice le conteneur telemetrygen doit être sur le même réseau Docker qu'Alloy pour résoudre alloy:4317. Donc je vais vérifier le réseau dans lequel tourne le conteneur alloy afin de m'assurer que telemetrygen s'aura bien contacter alloy et lui envoyés les données nécessaires.
+
+Dans mon cas, j’ai lancé le conteneur sans toucher à la configuration réseau, donc tout fonctionne sur le réseau bridge :
+
+```bash
+ubuntu@ubuntu-telemetry:~/alloy-lab$ sudo docker inspect alloy | grep NetworkMode
+            "NetworkMode": "bridge",
+ubuntu@ubuntu-telemetry:~/alloy-lab$ 
+```
+Ensuite, grâce à la commande ci-dessous, je vais lancer temporairement un conteneur Docker contenant l'image telemetrygen, qui génère et envoie 5 traces OpenTelemetry vers un collecteur OTLP :
+
+```bash
+docker run --rm \
+  --network bridge \
+  ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
+  traces \
+  --otlp-endpoint alloy:4317 \
+  --otlp-insecure \
+  --traces 5
+```
