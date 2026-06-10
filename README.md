@@ -139,3 +139,27 @@ docker run --rm \
   --otlp-insecure \
   --traces 5
 ```
+
+Ensuite, grâce à la commande ci-dessous, je vais lancer temporairement un conteneur Docker contenant l'image telemetrygen, qui génère et envoie des métriques OpenTelemetry pendant 10 secondes vers un collecteur OTLP :
+
+```bash
+docker run --rm \
+  --network bridge \
+  ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
+  metrics \
+  --otlp-endpoint alloy:4317 \
+  --otlp-insecure \
+  --duration 10s
+```
+
+Ensuite, grâce à la commande ci-dessous, je vais lancer temporairement un conteneur Docker contenant l'image telemetrygen, qui génère et envoie des logs OpenTelemetry pendant une durée de 5 secondes vers un collecteur OTLP :
+
+```bash
+docker run --rm \
+  --network bridge \
+  ghcr.io/open-telemetry/opentelemetry-collector-contrib/telemetrygen:latest \
+  logs \
+  --otlp-endpoint alloy:4317 \
+  --otlp-insecure \
+  --duration 5s
+```
