@@ -181,3 +181,89 @@ ts=2026-06-10T09:53:03.692704903Z level=info msg=Logs component_path=/ component
 ubuntu@ubuntu-telemetry:~/alloy-lab$
 ```
 Les résultats montrent qu'Alloy a correctement reçu et traité les traces, métriques et logs OpenTelemetry envoyés par telemetrygen, ce qui permet de valider le bon fonctionnement de la configuration mise en place.
+
+**Exercice 2  ·**  **Instrumenter une vraie application avec le SDK OpenTelemetry**   
+
+**Objectif :** faire tourner une petite application Flask auto-instrumentée OpenTelemetry. L'application émet traces, métriques et logs en OTLP vers Alloy au fil du trafic généré avec curl.
+
+Dans l'exercice précédent, nous avons envoyé de fausses données à l'aide de telemetrygen. Dans cet exercice, je vais déployer une application Flask et récolter les traces, les métriques et les logs pour les envoyer vers Alloy.
+
+Pour cela, je vais créer un dossier **app** dans lequel je vais créer un fichier **app.py** :
+
+```bash
+from flask import Flask
+import random
+import time
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    time.sleep(random.uniform(0.1, 0.5))
+
+    if random.random() < 0.1:
+        return "simulated error", 500
+
+    return "hello", 200
+
+app.run(host="0.0.0.0", port=5000)
+```
+Ensuite, j'ai créer un fichier requirements.txt qui sert à lister toutes les dépendances Python nécessaires au bon fonctionnememnt de l'application app.py : 
+
+```bash
+nano requirements.txt
+```
+
+```bash
+flask
+opentelemetry-distro
+opentelemetry-exporter-otlp
+```
+
+Ensuite, je vais créer un fichier Dockerfile dans le quel je vais construire l'application app.py et cette commande RUN pip install -r requirements.txt demande à pip d'installer automatiquement tous les paquets présents dans le fichier.
+
+```bash
+FROM python:3.11-slim
+
+WORKDIR /
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+RUN opentelemetry-bootstrap -a install
+
+COPY app.py .
+
+CMD ["opentelemetry-instrument","python","/app.py"]
+```
+Pour contruire l'image, je vais utiliser cette commande : 
+
+```bash
+docker build -t demo-app .
+```
+
+Dans cette étape, je vais lancer l'application docker précédement construit 
+
+```bash
+docker run -d \
+  --name app \
+  --network bridge \
+  -p 5000:5000 \
+  -e OTEL_SERVICE_NAME=demo \
+  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://172.17.0.2:4318 \
+  -e OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
+  -e OTEL_TRACES_EXPORTER=otlp \
+  -e OTEL_METRICS_EXPORTER=otlp \
+  -e OTEL_LOGS_EXPORTER=otlp \
+  demo-app
+```
+Pour générer du trafic je vais utiliser cette commande : 
+
+```bash
+for i in $(seq 1 30)
+do
+  curl -s http://172.17.0.2:5000/ >/dev/null
+done
+```
+
+Ensuite, dans Alloy je vais vérifier les logs pour confirmer que l'application Flask envoie réellement ses données vers Alloy.
