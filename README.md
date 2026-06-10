@@ -534,7 +534,7 @@ Grâce à la commande suivante, j'ai pu vérifier si Mimir recevait correctement
 curl -s "http://192.168.1.78:9009/prometheus/api/v1/query?query=up"
 
 Lors de la première exécution, la requête a bien été traitée par Mimir puisque le statut retourné était success. Mias, le champ result était vide, ce qui signifie qu'aucune métrique up n'était encore disponible dans Mimir à ce moment-là.
-
+```bash
 {
   "status": "success",
   "data": {
@@ -542,9 +542,9 @@ Lors de la première exécution, la requête a bien été traitée par Mimir pui
     "result": []
   }
 }
-
+```
 Quelques instants plus tard, après que Alloy ait effectué le scrape de Node Exporter et transmis les métriques à Mimir, la même requête a retourné le résultat suivant :
-
+```bash
 {
   "status":"success",
   "data":{
@@ -561,7 +561,7 @@ Quelques instants plus tard, après que Alloy ait effectué le scrape de Node Ex
     ]
   }
 }
-
+```
 La valeur 1 de la métrique up indique que la cible 192.168.1.78:9100, correspondant à Node Exporter, est joignable et que son scrape est effectué correctement par Alloy.
 
 J'ai ensuite ajouté Mimir comme source de données dans Grafana en utilisant le type de datasource Prometheus avec l'URL de Mimir. Dans l'outil Explore, l'exécution de la requête up retourne également la valeur 1, ce qui confirme que les métriques sont bien collectées par Alloy, stockées dans Mimir puis consultables depuis Grafana.
