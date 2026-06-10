@@ -71,5 +71,30 @@ et cette partie permet juste d'afficher le contenu complet des signaux :
 ```bash
 verbosity = "detailed"
 ```
+Après avoir créer le fichier config.alloy, je vais lancer le conteneur alloy et monter le volume contenant le fichier de configuration alloy situé sur l'hôte dans le conteneur. 
 
+Commande pour lancer le conteneur : 
+
+```bash
+docker run -d \
+  --name alloy \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -p 12345:12345 \
+  -v /home/ubuntu/alloy-lab/config.alloy:/etc/alloy/config.alloy \
+  grafana/alloy:v1.5.1 \
+  run /etc/alloy/config.alloy \
+  --server.http.listen-addr=0.0.0.0:12345
+```
+Grâce a cette commande je peux m'assurer que Alloy fonctionne correctement 
+
+```bash
+curl -s http://localhost:12345/-/ready
+```
+La commande ci-dessous me permet de voir les logs du conteneur Alloy :
+```bash
+docker logs alloy
+```
+
+Sur l'interface graphique, je peux visualiser le graph Alloy :
 
