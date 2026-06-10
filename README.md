@@ -180,3 +180,4 @@ ts=2026-06-10T09:52:55.035977834Z level=info msg=Metrics component_path=/ compon
 ts=2026-06-10T09:53:03.692704903Z level=info msg=Logs component_path=/ component_id=otelcol.exporter.debug.default "resource logs"=1 "log records"=6
 ubuntu@ubuntu-telemetry:~/alloy-lab$
 ```
+Les résultats montrent qu'Alloy a correctement reçu et traité les traces, métriques et logs OpenTelemetry envoyés par telemetrygen, ce qui permet de valider le bon fonctionnement de la configuration mise en place.
